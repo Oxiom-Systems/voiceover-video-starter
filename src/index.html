@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Web-native slideshow source for a narrated video." />
+    <title>Voiceover Video Starter</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="stage" aria-live="polite">
+      <article class="slide" id="slide">
+        <div class="thread thread-one" aria-hidden="true"></div>
+        <div class="thread thread-two" aria-hidden="true"></div>
+        <header class="slide-header">
+          <span class="brand" id="brand">Your project</span>
+          <span class="counter" id="counter">01 / 06</span>
+        </header>
+
+        <div class="slide-grid">
+          <section class="copy">
+            <p class="kicker" id="kicker"></p>
+            <h1 id="title"></h1>
+            <p class="body" id="body"></p>
+          </section>
+          <section class="visual" id="visual" aria-label="Scene visual"></section>
+        </div>
+
+        <footer class="slide-footer">
+          <span id="deck-eyebrow">VOICEOVER VIDEO STARTER</span>
+          <span class="progress" aria-hidden="true"><i id="progress"></i></span>
+        </footer>
+      </article>
+
+      <nav class="controls" aria-label="Slide controls">
+        <button id="previous" type="button">Previous</button>
+        <button id="next" type="button">Next</button>
+      </nav>
+    </main>
+
+    <script type="module" src="./player.js"></script>
+  </body>
+</html>
