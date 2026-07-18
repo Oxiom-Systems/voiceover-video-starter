@@ -9,7 +9,7 @@ It is designed to work equally well with Codex, Claude Code, ordinary terminal w
 - A responsive HTML slideshow with keyboard navigation.
 - A small, readable JavaScript scene contract.
 - Slideshow-only rendering with no TTS service required.
-- Optional narration through macOS `say` or a local Voicebox/Chatterbox server.
+- Voicebox narration using Chatterbox Turbo as the canonical speech engine.
 - Sentence-timed WAV assembly, H.264/AAC MP4 output, SRT/VTT captions, rendered frames, and a contact sheet.
 - `AGENTS.md`, `CLAUDE.md`, and a portable video-production skill for agent-assisted work.
 - A CI workflow that verifies the offline slideshow path.
@@ -40,24 +40,28 @@ The result is written to `output/starter-story/starter-story-slideshow.mp4`.
 
 ## Add narration
 
-On macOS, the built-in voice is the quickest zero-key path:
+Narration requires a local Voicebox server with Chatterbox Turbo. Configure the voice profile:
 
 ```bash
 cp .env.example .env
-TTS_PROVIDER=macos-say npm run voiceover
-npm run render
-npm run verify
 ```
 
-For higher-quality local narration, configure the Voicebox values in `.env`, start your Voicebox server, and run:
+Start Voicebox using your installation. For the macOS app, one local example is:
 
 ```bash
-TTS_PROVIDER=voicebox npm run voiceover
+/Applications/Voicebox.app/Contents/MacOS/voicebox-server --data-dir "$PWD/.voicebox-data"
+```
+
+In another terminal, generate and render the narrated video:
+
+```bash
+npm run check:prereqs
+npm run voiceover
 npm run render
 npm run verify
 ```
 
-See [docs/tts-providers.md](docs/tts-providers.md) for provider details and [docs/customization.md](docs/customization.md) for scenes, visuals, timings, images, and output settings.
+The builder accepts only Chatterbox engines, ensures the selected model is downloaded and loaded, then creates or reuses the configured Voicebox profile. See [docs/voicebox-chatterbox.md](docs/voicebox-chatterbox.md) for details and [docs/customization.md](docs/customization.md) for scenes, visuals, timings, images, and output settings.
 
 ## Edit the story
 

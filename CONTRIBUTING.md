@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions are welcome. Keep changes small, provider-neutral, and testable without paid services.
+Contributions are welcome. Keep changes small, preserve the Voicebox/Chatterbox narration contract, and keep the slideshow path testable without a live speech service.
 
 Before opening a pull request:
 

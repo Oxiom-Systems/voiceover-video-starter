@@ -28,7 +28,7 @@ npm run render:slideshow
 npm run verify:slideshow
 ```
 
-For narration, configure `.env`, then run:
+For narration, configure `.env`, start Voicebox with a Chatterbox model, then run:
 
 ```bash
 npm run voiceover
@@ -43,6 +43,7 @@ npm run verify
 - Keep visible slide copy short; use narration for nuance.
 - Never commit `.env`, generated audio/video, source recordings, or secrets.
 - Do not reuse a person's voice without their permission.
+- Voicebox with Chatterbox Turbo is the canonical narration path. Do not replace it with an operating-system voice or a paid cloud TTS provider.
 - After rendering, run the matching verification command and inspect `contact-sheet.png` plus full-size opening, text-heavy, and closing frames.
 - Report separately what was edited, rendered, technically verified, and visually inspected.
 

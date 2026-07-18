@@ -5,7 +5,23 @@ import { loadProject, relativeToRoot } from "./lib/project.mjs";
 import { durationSeconds, ffmpegConcatPath, run } from "./lib/process.mjs";
 
 const project = await loadProject();
-const provider = process.env.TTS_PROVIDER ?? (process.platform === "darwin" ? "macos-say" : "voicebox");
+const VOICEBOX_API_BASE = (process.env.VOICEBOX_API_BASE ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+const ENGINE = process.env.VOICEBOX_ENGINE ?? "chatterbox_turbo";
+const MODEL_NAME_BY_ENGINE = {
+  chatterbox: "chatterbox-tts",
+  chatterbox_turbo: "chatterbox-turbo"
+};
+const MODEL_NAME = MODEL_NAME_BY_ENGINE[ENGINE];
+if (!MODEL_NAME) {
+  throw new Error("VOICEBOX_ENGINE must be 'chatterbox_turbo' or 'chatterbox'.");
+}
+const PROFILE_NAME = process.env.VOICEBOX_PROFILE_NAME ?? "Technical Narrator";
+const PROFILE_DESIGN_PROMPT =
+  process.env.VOICEBOX_PROFILE_DESIGN_PROMPT ??
+  "Clear, warm technical narrator with calm documentary pacing.";
+const GENERATION_INSTRUCT =
+  process.env.VOICEBOX_GENERATION_INSTRUCT ??
+  "Speak clearly and naturally. Keep sentence endings confident and unhurried.";
 const clipDirectory = join(project.outputDirectory, "voiceover-clips");
 const silenceDirectory = join(project.outputDirectory, "silence");
 const finalAudio = join(project.outputDirectory, `${project.slug}-voiceover.wav`);
@@ -32,15 +48,14 @@ function spokenText(text) {
 }
 
 function signature(text) {
-  const providerSettings =
-    provider === "macos-say"
-      ? process.env.MACOS_SAY_VOICE ?? "Daniel"
-      : [
-          process.env.VOICEBOX_API_BASE ?? "http://127.0.0.1:8000",
-          process.env.VOICEBOX_ENGINE ?? "chatterbox_turbo",
-          process.env.VOICEBOX_PROFILE_ID ?? process.env.VOICEBOX_PROFILE_NAME ?? "Technical Narrator"
-        ].join("|");
-  return createHash("sha256").update(`${provider}|${providerSettings}|${text}`).digest("hex");
+  const voiceboxSettings = [
+    VOICEBOX_API_BASE,
+    ENGINE,
+    process.env.VOICEBOX_PROFILE_ID ?? PROFILE_NAME,
+    PROFILE_DESIGN_PROMPT,
+    GENERATION_INSTRUCT
+  ].join("|");
+  return createHash("sha256").update(`voicebox|${voiceboxSettings}|${text}`).digest("hex");
 }
 
 function normalizeAudio(source, destination) {
@@ -61,63 +76,75 @@ function normalizeAudio(source, destination) {
   ]);
 }
 
-function generateMacosSay(text, destination) {
-  if (process.platform !== "darwin") throw new Error("TTS_PROVIDER=macos-say requires macOS.");
-  const source = `${destination}.aiff`;
-  run("say", ["-v", process.env.MACOS_SAY_VOICE ?? "Daniel", "-o", source, text]);
-  normalizeAudio(source, destination);
-  unlinkSync(source);
-}
-
 async function voiceboxJson(path, options = {}) {
-  const base = process.env.VOICEBOX_API_BASE ?? "http://127.0.0.1:8000";
-  const response = await fetch(`${base}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
-    signal: AbortSignal.timeout(options.timeout ?? 60000)
-  });
+  const { timeout = 60000, ...fetchOptions } = options;
+  let response;
+  try {
+    response = await fetch(`${VOICEBOX_API_BASE}${path}`, {
+      ...fetchOptions,
+      headers: { "Content-Type": "application/json", ...(fetchOptions.headers ?? {}) },
+      signal: AbortSignal.timeout(timeout)
+    });
+  } catch (error) {
+    throw new Error(`Voicebox is not reachable at ${VOICEBOX_API_BASE}. Start the server and retry.`, { cause: error });
+  }
   if (!response.ok) throw new Error(`Voicebox ${path} failed: ${response.status} ${await response.text()}`);
   return response.json();
 }
 
 async function voiceboxProfile() {
   if (process.env.VOICEBOX_PROFILE_ID) {
-    return { id: process.env.VOICEBOX_PROFILE_ID, name: process.env.VOICEBOX_PROFILE_NAME ?? "Configured profile" };
+    return { id: process.env.VOICEBOX_PROFILE_ID, name: PROFILE_NAME };
   }
-  const name = process.env.VOICEBOX_PROFILE_NAME ?? "Technical Narrator";
   const profiles = await voiceboxJson("/profiles");
-  const existing = profiles.find((profile) => profile.name === name);
+  const existing = profiles.find((profile) => profile.name === PROFILE_NAME);
   if (existing) return existing;
-  const engine = process.env.VOICEBOX_ENGINE ?? "chatterbox_turbo";
   return voiceboxJson("/profiles", {
     method: "POST",
     body: JSON.stringify({
-      name,
+      name: PROFILE_NAME,
       description: "Narration profile created by voiceover-video-starter.",
       language: "en",
       voice_type: "designed",
-      design_prompt:
-        process.env.VOICEBOX_PROFILE_DESIGN_PROMPT ??
-        "Clear, warm technical narrator with calm documentary pacing.",
-      default_engine: engine
+      design_prompt: PROFILE_DESIGN_PROMPT,
+      default_engine: ENGINE
     })
   });
 }
 
+async function ensureChatterboxModel() {
+  const status = await voiceboxJson("/models/status", { timeout: 60000 });
+  const target = status.models.find((model) => model.model_name === MODEL_NAME);
+  if (!target) throw new Error(`Voicebox did not report the ${MODEL_NAME} model.`);
+  if (target.downloaded && target.loaded) return;
+
+  await voiceboxJson("/models/download", {
+    method: "POST",
+    timeout: 60000,
+    body: JSON.stringify({ model_name: MODEL_NAME })
+  });
+
+  const deadline = Date.now() + 10 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((resolveWait) => setTimeout(resolveWait, 2000));
+    const currentStatus = await voiceboxJson("/models/status", { timeout: 60000 });
+    const current = currentStatus.models.find((model) => model.model_name === MODEL_NAME);
+    if (current?.downloaded && current?.loaded) return;
+  }
+  throw new Error(`Timed out waiting for Voicebox to load ${MODEL_NAME}.`);
+}
+
 async function generateVoicebox(profile, text, destination) {
-  const base = process.env.VOICEBOX_API_BASE ?? "http://127.0.0.1:8000";
   const source = `${destination}.source.wav`;
-  const response = await fetch(`${base}/generate/stream`, {
+  const response = await fetch(`${VOICEBOX_API_BASE}/generate/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       profile_id: profile.id,
       text,
       language: "en",
-      engine: process.env.VOICEBOX_ENGINE ?? "chatterbox_turbo",
-      instruct:
-        process.env.VOICEBOX_GENERATION_INSTRUCT ??
-        "Speak clearly and naturally. Keep sentence endings confident and unhurried.",
+      engine: ENGINE,
+      instruct: GENERATION_INSTRUCT,
       max_chunk_chars: 800,
       crossfade_ms: 0,
       normalize: true
@@ -153,10 +180,8 @@ function makeSilence(seconds) {
 }
 
 const cache = existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, "utf8")) : {};
-const profile = provider === "voicebox" ? await voiceboxProfile() : null;
-if (!["macos-say", "voicebox"].includes(provider)) {
-  throw new Error("TTS_PROVIDER must be 'macos-say' or 'voicebox'.");
-}
+const profile = await voiceboxProfile();
+await ensureChatterboxModel();
 
 const sentenceGap = makeSilence(project.sentenceGapSeconds);
 const slideGap = makeSilence(project.slideGapSeconds);
@@ -173,8 +198,7 @@ for (const [sceneIndex, scene] of project.scenes.entries()) {
     const path = join(clipDirectory, filename);
     const currentSignature = signature(speech);
     if (!existsSync(path) || cache[filename] !== currentSignature) {
-      if (provider === "macos-say") generateMacosSay(speech, path);
-      else await generateVoicebox(profile, speech, path);
+      await generateVoicebox(profile, speech, path);
       cache[filename] = currentSignature;
       writeFileSync(cachePath, `${JSON.stringify(cache, null, 2)}\n`);
     }
@@ -215,8 +239,10 @@ run("ffmpeg", [
 
 const manifest = {
   version: 1,
-  provider,
-  profile: profile ? { id: profile.id, name: profile.name } : { name: process.env.MACOS_SAY_VOICE ?? "Daniel" },
+  provider: "voicebox",
+  engine: ENGINE,
+  model: MODEL_NAME,
+  profile: { id: profile.id, name: profile.name },
   audioFile: relativeToRoot(finalAudio),
   sentenceGapSeconds: project.sentenceGapSeconds,
   slideGapSeconds: project.slideGapSeconds,
@@ -227,7 +253,9 @@ writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(
   JSON.stringify(
     {
-      provider,
+      provider: "voicebox",
+      engine: ENGINE,
+      model: MODEL_NAME,
       output: relativeToRoot(finalAudio),
       durationSeconds: Number(durationSeconds(finalAudio).toFixed(3)),
       manifest: relativeToRoot(manifestPath),
