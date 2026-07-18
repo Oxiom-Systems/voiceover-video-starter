@@ -21,13 +21,14 @@ description: Create and verify narrated videos or slideshow MP4s from source mat
 3. Update deck metadata, scene copy, narration, visuals, and fallback durations.
 4. Run `npm run check` and preview with `npm run preview`.
 5. For a silent deck, run `npm run render:slideshow` and `npm run verify:slideshow`.
-6. For narration, configure `.env`, run `npm run voiceover`, `npm run render`, and `npm run verify`.
+6. For narration, configure `.env`, start Voicebox with Chatterbox Turbo, then run `npm run voiceover`, `npm run render`, and `npm run verify`.
 7. Inspect `contact-sheet.png` and full-size opening, text-heavy, and closing frames.
 8. Report artifact paths and verification results.
 
 ## Boundaries
 
 - Do not commit `.env`, `output/`, private inputs, or voice recordings.
+- Use Voicebox with Chatterbox Turbo for narration; do not silently substitute another TTS provider.
 - Do not present a slideshow-only render as a narrated deliverable.
 - Do not present technical verification as visual inspection.
 - State exactly what prerequisite is missing if narration cannot be generated.
