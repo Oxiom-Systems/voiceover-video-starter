@@ -127,6 +127,28 @@ window.addEventListener("keydown", (event) => {
 });
 
 render();
-document.fonts.ready.then(() => {
-  window.__SLIDES_READY__ = true;
+const failedImages = [];
+const imageReadiness = [...document.images].map((image) => {
+  if (image.complete) {
+    if (image.naturalWidth === 0) failedImages.push(image.currentSrc || image.src || "unknown image");
+    return Promise.resolve();
+  }
+  return new Promise((resolveImage) => {
+    image.addEventListener("load", resolveImage, { once: true });
+    image.addEventListener(
+      "error",
+      () => {
+        failedImages.push(image.currentSrc || image.src || "unknown image");
+        resolveImage();
+      },
+      { once: true }
+    );
+  });
+});
+Promise.all([document.fonts.ready, ...imageReadiness]).then(() => {
+  if (failedImages.length > 0) {
+    window.__SLIDES_ERROR__ = `Failed to load: ${failedImages.join(", ")}`;
+  } else {
+    window.__SLIDES_READY__ = true;
+  }
 });

@@ -23,5 +23,6 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run check
+      - run: npm run script
       - run: npm run render:slideshow
       - run: npm run verify:slideshow

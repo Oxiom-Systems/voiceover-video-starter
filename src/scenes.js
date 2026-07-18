@@ -13,6 +13,7 @@ export const scenes = [
     body: "Build the narrative before polishing transitions, voices, or effects.",
     voiceover:
       "A strong explainer starts with the story. Decide what the audience should understand, then give each idea one clear scene.",
+    sourceSupport: ["docs/story-script-slides.md"],
     durationMs: 8500,
     visual: { type: "signal", label: "Source to story", value: "01" }
   },
@@ -22,6 +23,7 @@ export const scenes = [
     body: "The same scene object holds visible copy and the full spoken explanation.",
     voiceover:
       "Keep the words on screen brief enough to read at a glance. The voiceover can explain context, boundaries, and the details that would make a slide feel crowded.",
+    sourceSupport: ["docs/story-script-slides.md", "src/scenes.js"],
     durationMs: 9500,
     visual: {
       type: "comparison",
@@ -35,6 +37,7 @@ export const scenes = [
     body: "What you review locally is what Playwright captures for the video.",
     voiceover:
       "The slideshow is not a disposable mockup. The browser preview and the renderer import the same scene data, which keeps review and final output aligned.",
+    sourceSupport: ["src/player.js", "scripts/render-video.mjs"],
     durationMs: 9000,
     visual: { type: "steps", items: ["Preview", "Capture", "Render"] }
   },
@@ -44,6 +47,7 @@ export const scenes = [
     body: "Every spoken sentence is measured before the slides are assembled.",
     voiceover:
       "For a narrated video, each sentence is generated and measured separately. Those measured durations control the slide timing and become the source for the caption files.",
+    sourceSupport: ["scripts/build-voiceover.mjs", "scripts/lib/captions.mjs"],
     durationMs: 10000,
     visual: { type: "signal", label: "Sentence timed", value: "A/V" }
   },
@@ -53,6 +57,7 @@ export const scenes = [
     body: "Repository instructions, a portable skill, and ordinary Git keep the handoff simple.",
     voiceover:
       "Codex and Claude Code follow the same repository contract. A normal Git structure also means the project remains comfortable in GitX, GitHub Desktop, or the command line.",
+    sourceSupport: ["AGENTS.md", "CLAUDE.md", "docs/agent-workflow.md"],
     durationMs: 9500,
     visual: {
       type: "quote",
@@ -65,6 +70,7 @@ export const scenes = [
     body: "Technical checks catch stream errors. Real frame inspection catches visual ones.",
     voiceover:
       "A successful command is not the finish line. Verify the video and audio streams, inspect the contact sheet, and open the most important frames before sharing the result.",
+    sourceSupport: ["scripts/verify-video.mjs", "AGENTS.md"],
     durationMs: 9000,
     visual: { type: "finish", items: ["H.264", "AAC", "SRT", "VTT"] }
   }

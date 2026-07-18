@@ -8,7 +8,8 @@ Turn supplied source material into a verified narrated MP4 or slideshow MP4. Cre
 
 1. Read `skills/video-voiceover/SKILL.md`.
 2. Read the user's source material before drafting scenes.
-3. Inspect `src/scenes.js`, `project.config.mjs`, and the relevant docs.
+3. For a new story, read `docs/story-script-slides.md` and use `templates/story-brief.md`.
+4. Inspect `src/scenes.js`, `project.config.mjs`, and the relevant docs.
 
 ## Source of truth
 
@@ -23,6 +24,7 @@ Turn supplied source material into a verified narrated MP4 or slideshow MP4. Cre
 npm install
 npm run setup
 npm run check
+npm run script
 npm run preview
 npm run render:slideshow
 npm run verify:slideshow
@@ -41,6 +43,8 @@ npm run verify
 - Preserve source files. Put user-provided material in `inputs/` and derived visual assets in `src/assets/`.
 - Do not invent claims, results, quotations, credentials, or citations.
 - Keep visible slide copy short; use narration for nuance.
+- Make the voiceover read as a complete, natural script even without the slides.
+- Use `prompts/create-video.md` when a reusable creation prompt is helpful.
 - Never commit `.env`, generated audio/video, source recordings, or secrets.
 - Do not reuse a person's voice without their permission.
 - Voicebox with Chatterbox Turbo is the canonical narration path. Do not replace it with an operating-system voice or a paid cloud TTS provider.

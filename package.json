@@ -1,6 +1,6 @@
 {
   "name": "voiceover-video-starter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Agent-friendly starter for narrated videos and web-native slideshows.",
   "type": "module",
@@ -10,7 +10,9 @@
   "scripts": {
     "setup": "playwright install chromium",
     "check:prereqs": "node scripts/check-prereqs.mjs",
-    "check": "node --check src/scenes.js && node --check src/player.js && node --check scripts/lib/project.mjs && node --check scripts/lib/process.mjs && node --check scripts/lib/server.mjs && node --check scripts/lib/captions.mjs && node --check scripts/preview.mjs && node --check scripts/check-prereqs.mjs && node --check scripts/build-voiceover.mjs && node --check scripts/render-video.mjs && node --check scripts/verify-video.mjs",
+    "check": "node --check src/scenes.js && node --check src/player.js && node --check scripts/lib/project.mjs && node --check scripts/lib/process.mjs && node --check scripts/lib/server.mjs && node --check scripts/lib/captions.mjs && node --check scripts/preview.mjs && node --check scripts/check-prereqs.mjs && node --check scripts/export-script.mjs && node --check scripts/build-voiceover.mjs && node --check scripts/render-video.mjs && node --check scripts/verify-video.mjs && npm test",
+    "test": "node --test tests/*.test.mjs",
+    "script": "node scripts/export-script.mjs",
     "preview": "node scripts/preview.mjs",
     "voiceover": "node scripts/build-voiceover.mjs",
     "render": "node scripts/render-video.mjs",
