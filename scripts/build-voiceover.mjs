@@ -15,13 +15,13 @@ const MODEL_NAME = MODEL_NAME_BY_ENGINE[ENGINE];
 if (!MODEL_NAME) {
   throw new Error("VOICEBOX_ENGINE must be 'chatterbox_turbo' or 'chatterbox'.");
 }
-const PROFILE_NAME = process.env.VOICEBOX_PROFILE_NAME ?? "Technical Narrator";
+const PROFILE_NAME = process.env.VOICEBOX_PROFILE_NAME ?? "British Female Narrator";
 const PROFILE_DESIGN_PROMPT =
   process.env.VOICEBOX_PROFILE_DESIGN_PROMPT ??
-  "Clear, warm technical narrator with calm documentary pacing.";
+  "Polished British female narrator. Adult voice, warm and intelligent, natural documentary pacing, crisp pronunciation, confident without sounding theatrical or sales-driven.";
 const GENERATION_INSTRUCT =
   process.env.VOICEBOX_GENERATION_INSTRUCT ??
-  "Speak clearly and naturally. Keep sentence endings confident and unhurried.";
+  "Use a natural British female narrator voice. Speak clearly at a calm pace, with confident sentence endings and restrained emphasis.";
 const clipDirectory = join(project.outputDirectory, "voiceover-clips");
 const silenceDirectory = join(project.outputDirectory, "silence");
 const finalAudio = join(project.outputDirectory, `${project.slug}-voiceover.wav`);
@@ -47,11 +47,12 @@ function spokenText(text) {
   }, text);
 }
 
-function signature(text) {
+function signature(text, profileId) {
   const voiceboxSettings = [
     VOICEBOX_API_BASE,
     ENGINE,
-    process.env.VOICEBOX_PROFILE_ID ?? PROFILE_NAME,
+    profileId,
+    PROFILE_NAME,
     PROFILE_DESIGN_PROMPT,
     GENERATION_INSTRUCT
   ].join("|");
@@ -196,7 +197,7 @@ for (const [sceneIndex, scene] of project.scenes.entries()) {
     const speech = spokenText(text);
     const filename = `slide-${String(sceneIndex + 1).padStart(2, "0")}-sentence-${String(sentenceIndex + 1).padStart(2, "0")}.wav`;
     const path = join(clipDirectory, filename);
-    const currentSignature = signature(speech);
+    const currentSignature = signature(speech, profile.id);
     if (!existsSync(path) || cache[filename] !== currentSignature) {
       await generateVoicebox(profile, speech, path);
       cache[filename] = currentSignature;

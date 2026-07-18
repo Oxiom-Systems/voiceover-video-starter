@@ -27,6 +27,10 @@ function insideRoot(path) {
   return path === ROOT || path.startsWith(`${ROOT}${sep}`);
 }
 
+function insideDirectory(path, directory) {
+  return path === directory || path.startsWith(`${directory}${sep}`);
+}
+
 function projectPath(value, label) {
   if (!value || typeof value !== "string") throw new Error(`${label} must be a non-empty string.`);
   const path = isAbsolute(value) ? resolve(value) : resolve(ROOT, value);
@@ -37,6 +41,27 @@ function projectPath(value, label) {
 function positiveNumber(value, label) {
   if (!Number.isFinite(value) || value <= 0) throw new Error(`${label} must be a positive number.`);
   return value;
+}
+
+function validateSourceSupport(value, label) {
+  if (value === undefined) return;
+  const entries = Array.isArray(value) ? value : [value];
+  if (entries.length === 0 || entries.some((entry) => typeof entry !== "string" || !entry.trim())) {
+    throw new Error(`${label} must be a non-empty string or array of non-empty strings.`);
+  }
+}
+
+export function validateLocalImageSource(src, { root = ROOT, pageFile, label = "Image" } = {}) {
+  if (typeof src !== "string" || !src.trim()) throw new Error(`${label} requires a non-empty src.`);
+  if (!pageFile) throw new Error(`${label} validation requires pageFile.`);
+  if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.startsWith("//")) {
+    throw new Error(`${label} must use a local repository asset.`);
+  }
+  const sourcePath = decodeURIComponent(src.split(/[?#]/, 1)[0]);
+  const path = sourcePath.startsWith("/") ? resolve(root, `.${sourcePath}`) : resolve(dirname(pageFile), sourcePath);
+  if (!insideDirectory(path, root)) throw new Error(`${label} must stay inside the repository.`);
+  if (!existsSync(path)) throw new Error(`${label} is missing: ${src}`);
+  return path;
 }
 
 export async function loadProject() {
@@ -58,6 +83,13 @@ export async function loadProject() {
       if (typeof scene[field] !== "string" || !scene[field].trim()) {
         throw new Error(`Scene ${index + 1} requires a non-empty ${field}.`);
       }
+    }
+    validateSourceSupport(scene.sourceSupport, `Scene ${index + 1} sourceSupport`);
+    if (scene.visual?.type === "image") {
+      validateLocalImageSource(scene.visual.src, {
+        pageFile,
+        label: `Scene ${index + 1} image`
+      });
     }
     positiveNumber(scene.durationMs, `Scene ${index + 1} durationMs`);
   }

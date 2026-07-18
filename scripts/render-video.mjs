@@ -53,7 +53,11 @@ try {
     const sceneNumber = index + 1;
     const framePath = join(frameDirectory, `scene-${String(sceneNumber).padStart(2, "0")}.png`);
     await page.goto(`${url}?record=1&clean=1&scene=${sceneNumber}`, { waitUntil: "networkidle" });
-    await page.waitForFunction(() => window.__SLIDES_READY__ === true && window.__ACTIVE_SCENE__ > 0);
+    await page.waitForFunction(
+      () => (window.__SLIDES_READY__ === true && window.__ACTIVE_SCENE__ > 0) || Boolean(window.__SLIDES_ERROR__)
+    );
+    const slideError = await page.evaluate(() => window.__SLIDES_ERROR__ ?? null);
+    if (slideError) throw new Error(`Scene ${sceneNumber} is not render-ready: ${slideError}`);
     await page.screenshot({ path: framePath });
   }
 } finally {

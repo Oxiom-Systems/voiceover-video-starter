@@ -10,6 +10,9 @@ It is designed to work equally well with Codex, Claude Code, ordinary terminal w
 - A small, readable JavaScript scene contract.
 - Slideshow-only rendering with no TTS service required.
 - Voicebox narration using Chatterbox Turbo as the canonical speech engine.
+- British female and American male Chatterbox profile recipes.
+- Reusable prompts for source analysis, script writing, and HTML5 slideshow creation.
+- A reviewable Markdown script export before speech generation.
 - Sentence-timed WAV assembly, H.264/AAC MP4 output, SRT/VTT captions, rendered frames, and a contact sheet.
 - `AGENTS.md`, `CLAUDE.md`, and a portable video-production skill for agent-assisted work.
 - A CI workflow that verifies the offline slideshow path.
@@ -24,6 +27,7 @@ cd voiceover-video-starter
 npm install
 npm run setup
 npm run check:prereqs
+npm run script
 npm run preview
 ```
 
@@ -40,11 +44,14 @@ The result is written to `output/starter-story/starter-story-slideshow.mp4`.
 
 ## Add narration
 
-Narration requires a local Voicebox server with Chatterbox Turbo. Configure the voice profile:
+Narration requires a local Voicebox server with Chatterbox Turbo. Choose a voice profile:
 
 ```bash
-cp .env.example .env
+cp voices/british-female.env.example .env
+# or: cp voices/american-male.env.example .env
 ```
+
+`cp .env.example .env` also selects the British female recipe.
 
 Start Voicebox using your installation. For the macOS app, one local example is:
 
@@ -61,7 +68,7 @@ npm run render
 npm run verify
 ```
 
-The builder accepts only Chatterbox engines, ensures the selected model is downloaded and loaded, then creates or reuses the configured Voicebox profile. See [docs/voicebox-chatterbox.md](docs/voicebox-chatterbox.md) for details and [docs/customization.md](docs/customization.md) for scenes, visuals, timings, images, and output settings.
+The builder accepts only Chatterbox engines, ensures the selected model is downloaded and loaded, then creates or reuses the configured Voicebox profile. Designed-profile recipes describe a voice but do not guarantee the same generated identity on separate Voicebox data stores. See [voices/README.md](voices/README.md) and [docs/voicebox-chatterbox.md](docs/voicebox-chatterbox.md) for details.
 
 ## Edit the story
 
@@ -79,10 +86,13 @@ Each scene keeps short on-screen copy separate from the spoken script:
   title: "Important ideas deserve a clear story.",
   body: "Keep the slide concise. Let the narration carry nuance.",
   voiceover: "This longer paragraph is spoken and used to build captions.",
+  sourceSupport: ["inputs/approved-brief.md"],
   durationMs: 8000,
   visual: { type: "steps", items: ["Write", "Narrate", "Render"] }
 }
 ```
+
+Use [docs/story-script-slides.md](docs/story-script-slides.md) for the complete source-to-story method and [prompts/create-video.md](prompts/create-video.md) for ready-to-use Claude Code and Codex prompts. Run `npm run script` at any time to export a review copy to `output/<slug>/<slug>-script.md`; continue editing `src/scenes.js` as the source of truth.
 
 ## Use it with an agent
 
@@ -98,6 +108,7 @@ A narrated run produces:
 
 ```text
 output/<slug>/
+  <slug>-script.md
   <slug>.mp4
   <slug>-captions.srt
   <slug>-captions.vtt

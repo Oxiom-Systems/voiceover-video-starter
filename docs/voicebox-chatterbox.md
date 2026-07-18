@@ -4,23 +4,28 @@ Voicebox with Chatterbox Turbo is the narration system for this starter. The pip
 
 ## Configure Voicebox
 
-Copy the environment template:
+Choose one of the packaged profile recipes:
 
 ```bash
-cp .env.example .env
+cp voices/british-female.env.example .env
+# or: cp voices/american-male.env.example .env
 ```
+
+The root `.env.example` also selects the British female recipe.
 
 The canonical engine is:
 
 ```bash
 VOICEBOX_API_BASE=http://127.0.0.1:8000
 VOICEBOX_ENGINE=chatterbox_turbo
-VOICEBOX_PROFILE_NAME=Technical Narrator
+VOICEBOX_PROFILE_NAME=British Female Narrator
 ```
 
 `VOICEBOX_ENGINE` may be `chatterbox_turbo` or `chatterbox`. Other engines are rejected so narration cannot silently drift from the repository contract.
 
 If `VOICEBOX_PROFILE_ID` is set, the builder reuses that profile. Otherwise it finds a profile with the configured name or creates a designed Voicebox profile from `VOICEBOX_PROFILE_DESIGN_PROMPT`.
+
+The repository also includes an `American Male Narrator` recipe. These prompt recipes describe the intended voice but do not guarantee the same voice identity in a separate Voicebox data store. Exact approved-voice reuse requires a permitted local profile or licensed reference recording; keep profile ids and recordings out of Git. See `voices/README.md`.
 
 ## Start the server
 
