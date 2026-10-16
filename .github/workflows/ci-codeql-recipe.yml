@@ -1,0 +1,71 @@
+name: CodeQL isolated analysis recipe
+on:
+  workflow_call:
+    inputs:
+      upload_results:
+        description: Enable native SARIF only after root completes default-setup transition
+        type: boolean
+        required: false
+        default: false
+permissions:
+  contents: read
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    if: >-
+      github.repository == 'Oxiom-Systems/voiceover-video-starter' &&
+      github.repository_id == '1304972867' &&
+      (
+        ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+         github.ref_protected == true &&
+         (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) ||
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.head.repo.id == 1304972867 &&
+         (github.base_ref == 'main' || github.base_ref == 'dev')) ||
+        (github.event_name == 'schedule' && github.ref_protected == true &&
+         github.event.repository.default_branch == 'main' && github.ref == 'refs/heads/main')
+      )
+    runs-on:
+      group: ci-build-public-ephemeral
+      labels: [ci-linux-cpu-v1-r1304972867]
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        language: ['actions', 'javascript-typescript']
+    steps:
+      - name: Checkout exact event source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Initialize default queries with remote threat model
+        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          threads: 2
+          ram: 2048
+          config: |
+            disable-default-queries: false
+            threat-models: remote
+
+      - name: Analyze without upload until transition approval
+        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        with:
+          category: /language:${{ matrix.language }}
+          threads: 2
+          ram: 2048
+          upload: ${{ inputs.upload_results && 'always' || 'never' }}
+          upload-database: false
+      - name: Measure guest memory and disk after analysis
+        if: always()
+        run: |
+          free -m
+          df -Pk . "$RUNNER_TEMP"
+          du -sk "$RUNNER_TEMP" 2>/dev/null || true
