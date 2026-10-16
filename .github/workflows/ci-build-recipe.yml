@@ -1,0 +1,96 @@
+name: voiceover-video-starter public CPU build recipe
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  slideshow:
+    if: >-
+      github.repository_id == '1304972867' &&
+      (
+        ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+         github.ref_protected == true &&
+         (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')) ||
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.head.repo.id == 1304972867 &&
+         (github.base_ref == 'dev' || github.base_ref == 'main'))
+      )
+    runs-on:
+      group: ci-build-public-ephemeral
+      labels: [ci-linux-cpu-v1-r1304972867]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the event SHA without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up managed Python for public route contracts
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Test the public leaf event and isolation contracts
+        run: python -m unittest discover -s tests -p 'test_ci_public_route.py'
+      - name: Prepare isolated guest-local tool container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --progress=plain --tag ci-public-tools --file .github/ci-toolchain.Dockerfile .github
+          docker create --name ci-public-build --cpus 2 --memory 3g --memory-swap 3g --pids-limit 512 \
+            --env CI=true --env GITHUB_ACTIONS=true --env GITHUB_SHA --env GITHUB_REPOSITORY \
+            --env GITHUB_RUN_ID --env GITHUB_RUN_ATTEMPT --env RUNNER_TEMP=/tmp/ci-runner \
+            ci-public-tools sleep infinity
+          docker start ci-public-build
+          docker exec ci-public-build mkdir -p /workspace /tmp/ci-runner
+          docker cp "$GITHUB_WORKSPACE/." ci-public-build:/workspace/
+          docker exec ci-public-build git config --global --add safe.directory /workspace
+          docker exec ci-public-build node --version
+      - name: Verify FFmpeg installed in the guest tool container
+        run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          command -v ffmpeg
+          ffmpeg -version
+          CI_COMMAND
+        shell: bash
+      - run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          npm ci
+          CI_COMMAND
+        name: npm ci
+        shell: bash
+      - run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          npx playwright install --with-deps chromium
+          CI_COMMAND
+        name: npx playwright install --with-deps chromium
+        shell: bash
+      - run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          npm run check
+          CI_COMMAND
+        name: npm run check
+        shell: bash
+      - run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          npm run script
+          CI_COMMAND
+        name: npm run script
+        shell: bash
+      - run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          npm run render:slideshow
+          CI_COMMAND
+        name: npm run render:slideshow
+        shell: bash
+      - run: |
+          docker exec -i ci-public-build bash -e -o pipefail -s <<'CI_COMMAND'
+          npm run verify:slideshow
+          CI_COMMAND
+        name: npm run verify:slideshow
+        shell: bash
+      - name: Remove the guest-local tool container
+        if: always()
+        run: docker rm --force ci-public-build

@@ -1,0 +1,4 @@
+self-hosted-runner:
+  labels:
+    - ci-linux-cpu-v1-r1304972867
+config-variables: null
