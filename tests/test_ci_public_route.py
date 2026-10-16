@@ -61,6 +61,8 @@ class PublicBuildRouteTest(unittest.TestCase):
             self.assertRegex(image, r'^docker.io/library/(node|ruby):[^@]+@sha256:[a-f0-9]{64}$')
         self.assertIn('--cpus 2 --memory 3g --memory-swap 3g --pids-limit 512', source)
         self.assertIn('https://deb.debian.org', dockerfile)
+        self.assertIn('DOCKER_BUILDKIT=0 docker build --platform linux/amd64', source)
+        self.assertNotIn('--progress=', source)
         self.assertNotIn('sudo ', source + dockerfile)
         self.assertNotIn('docker.sock', source + dockerfile)
 

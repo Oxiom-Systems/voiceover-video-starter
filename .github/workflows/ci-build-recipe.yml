@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker build --platform linux/amd64 --progress=plain --tag ci-public-tools --file .github/ci-toolchain.Dockerfile .github
+          DOCKER_BUILDKIT=0 docker build --platform linux/amd64 --tag ci-public-tools --file .github/ci-toolchain.Dockerfile .github
           docker create --name ci-public-build --cpus 2 --memory 3g --memory-swap 3g --pids-limit 512 \
             --env CI=true --env GITHUB_ACTIONS=true --env GITHUB_SHA --env GITHUB_REPOSITORY \
             --env GITHUB_RUN_ID --env GITHUB_RUN_ATTEMPT --env RUNNER_TEMP=/tmp/ci-runner \
