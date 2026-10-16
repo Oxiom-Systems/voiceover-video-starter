@@ -2,27 +2,17 @@ name: Verify starter
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main]
   pull_request:
+    branches: [dev, main]
+
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   slideshow:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 20
-          cache: npm
-      - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run check
-      - run: npm run script
-      - run: npm run render:slideshow
-      - run: npm run verify:slideshow
+    permissions:
+      contents: read
+    uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-build-recipe.yml@95018c0ebfceda80738228f6397e1d318dbf8e8a
