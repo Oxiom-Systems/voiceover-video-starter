@@ -15,4 +15,4 @@ jobs:
   slideshow:
     permissions:
       contents: read
-    uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-build-recipe.yml@be221a088aa553b5828bc0356f32db963beda68b
+    uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-build-recipe.yml@95018c0ebfceda80738228f6397e1d318dbf8e8a
