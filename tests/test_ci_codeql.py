@@ -40,6 +40,20 @@ class CodeQLContract(unittest.TestCase):
   for action in re.findall(r'uses: (\S+)',text):self.assertRegex(action,r'@[0-9a-f]{40}$')
   self.assertEqual(len(re.findall(r'uses: github/codeql-action/',text)),2)
 
+ def test_javascript_extraction_has_approved_node_on_path_before_codeql_init(self):
+  text=self.source();steps=re.findall(r'(?ms)^      - .*?(?=^      - |\Z)',text)
+  setup=[(i,step) for i,step in enumerate(steps) if 'uses: actions/setup-node@' in step]
+  self.assertEqual(len(setup),1,'Fresh guest has no node on PATH for the TypeScript extractor')
+  index,step=setup[0]
+  self.assertIn('uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020',step)
+  self.assertIn("if: matrix.language == 'javascript-typescript'",step)
+  self.assertIn("node-version: '22'",step)
+  init=next(i for i,step in enumerate(steps) if 'uses: github/codeql-action/init@' in step)
+  self.assertLess(index,init)
+  for language in LANGUAGES:
+   self.assertEqual(eval(step.split('if: ',1)[1].splitlines()[0].replace('matrix.language',repr(language)),{'__builtins__':{}}),language=='javascript-typescript')
+  for unwanted in ['cache:', 'token:', 'registry-url:', 'always()']:self.assertNotIn(unwanted,step)
+
  def test_thin_caller_immutable_pin_and_weekly_default_branch_contract(self):
   text=(ROOT/'.github/workflows/codeql.yml').read_text()
   self.assertIn('uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@82be284bfcdf5c14a435c1e307d6c079fffe143b',text)
