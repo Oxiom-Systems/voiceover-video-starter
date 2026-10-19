@@ -1,0 +1,19 @@
+name: CodeQL
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    - cron: '19 3 * * 2'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+jobs:
+  analyze:
+    uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@e50638bad8fae150bfa3191dd7dd16cb04b3cd06
+    with:
+      # Root flips this literal only after canaries and managed-default retirement.
+      upload_results: false
