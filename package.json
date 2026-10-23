@@ -1,6 +1,6 @@
 {
   "name": "voiceover-video-starter",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Agent-friendly starter for narrated videos and web-native slideshows.",
   "type": "module",
