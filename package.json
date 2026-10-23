@@ -5,7 +5,7 @@
   "description": "Agent-friendly starter for narrated videos and web-native slideshows.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "^22.23.4 || ^24.22.1 || ^26.12.1"
   },
   "scripts": {
     "setup": "playwright install chromium",

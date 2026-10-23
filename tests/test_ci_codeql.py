@@ -47,7 +47,7 @@ class CodeQLContract(unittest.TestCase):
   index,step=setup[0]
   self.assertIn('uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020',step)
   self.assertIn("if: matrix.language == 'javascript-typescript'",step)
-  self.assertIn("node-version: '22'",step)
+  self.assertIn("node-version: '22.23.4'",step)
   init=next(i for i,step in enumerate(steps) if 'uses: github/codeql-action/init@' in step)
   self.assertLess(index,init)
   for language in LANGUAGES:
