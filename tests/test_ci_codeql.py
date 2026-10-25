@@ -56,12 +56,12 @@ class CodeQLContract(unittest.TestCase):
 
  def test_thin_caller_immutable_pin_and_weekly_default_branch_contract(self):
   text=(ROOT/'.github/workflows/codeql.yml').read_text()
-  self.assertIn('uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@e50638bad8fae150bfa3191dd7dd16cb04b3cd06',text)
+  self.assertIn('uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@b3a96b7461127bbdd55006f6a7cc7e16daa7e824',text)
   self.assertIn('cron:',text);self.assertIn("branches: [main, dev]",text)
   self.assertIn('workflow_dispatch:',text);self.assertIn('pull_request:',text);self.assertIn('push:',text)
   self.assertIn('upload_results: false',text)
   for forbidden in ['secrets:', 'secrets.', 'inherit','pull_request_target','repository_dispatch','runs-on:','steps:']:self.assertNotIn(forbidden,text)
   pin=re.search(r'uses: (\S+)',text)[1]
-  self.assertEqual(pin,'Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@e50638bad8fae150bfa3191dd7dd16cb04b3cd06')
+  self.assertEqual(pin,'Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@b3a96b7461127bbdd55006f6a7cc7e16daa7e824')
 
 if __name__=='__main__':unittest.main()

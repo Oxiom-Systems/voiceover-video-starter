@@ -13,7 +13,7 @@ permissions:
   security-events: write
 jobs:
   analyze:
-    uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@e50638bad8fae150bfa3191dd7dd16cb04b3cd06
+    uses: Oxiom-Systems/voiceover-video-starter/.github/workflows/ci-codeql-recipe.yml@b3a96b7461127bbdd55006f6a7cc7e16daa7e824
     with:
       # Root flips this literal only after canaries and managed-default retirement.
       upload_results: false
