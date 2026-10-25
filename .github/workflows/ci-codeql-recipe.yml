@@ -28,7 +28,7 @@ jobs:
     runs-on:
       group: ci-build-public-ephemeral
       labels: [ci-linux-cpu-v1-r1304972867]
-    timeout-minutes: 45
+    timeout-minutes: 120
     permissions:
       contents: read
       actions: read
